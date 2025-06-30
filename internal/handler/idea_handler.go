@@ -5,14 +5,16 @@ import (
 	"github.com/mortal-coders/think-side/internal/model"
 	"github.com/mortal-coders/think-side/internal/service"
 	"github.com/valyala/fasthttp"
+	"time"
 )
 
 type IdeaHandler struct {
-	svc service.IdeaService
+	svc     service.IdeaService
+	encoder service.Encoder
 }
 
-func NewIdeaHandler(s service.IdeaService) *IdeaHandler {
-	return &IdeaHandler{svc: s}
+func NewIdeaHandler(s service.IdeaService, e service.Encoder) *IdeaHandler {
+	return &IdeaHandler{svc: s, encoder: e}
 }
 
 func (h *IdeaHandler) Create(ctx *fasthttp.RequestCtx) {
@@ -22,6 +24,8 @@ func (h *IdeaHandler) Create(ctx *fasthttp.RequestCtx) {
 		ctx.SetBodyString("Bad Request")
 		return
 	}
+
+	input.ID, _ = h.encoder.Encode(time.Now().UnixNano())
 
 	if err := h.svc.CreateIdea(&input); err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -59,8 +63,8 @@ func (h *IdeaHandler) GetIdea(ctx *fasthttp.RequestCtx) {
 func (h *IdeaHandler) AddProp(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 
-	var prop *model.Prop
-	if err := json.Unmarshal(ctx.PostBody(), prop); err != nil {
+	var prop model.Prop
+	if err := json.Unmarshal(ctx.PostBody(), &prop); err != nil {
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString("Invalid JSON")
 		return
@@ -68,8 +72,9 @@ func (h *IdeaHandler) AddProp(ctx *fasthttp.RequestCtx) {
 
 	// Güvenlik: ID'yi dışarıdan alıyoruz, override edelim
 	prop.IdeaID = id
+	prop.ID, _ = h.encoder.Encode(time.Now().UnixMilli())
 
-	if err := h.svc.AddProp(id, prop); err != nil {
+	if err := h.svc.AddProp(prop.ID, &prop); err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		ctx.SetBodyString("Could not add prop")
 		return

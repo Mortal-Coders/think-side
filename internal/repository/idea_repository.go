@@ -25,7 +25,7 @@ func (i *ideaRepo) Create(idea *model.Idea) error {
 
 func (i *ideaRepo) GetByID(id string) (*model.Idea, error) {
 	var idea model.Idea
-	err := i.db.Preload("Category").Preload("Pros").Preload("Cons").First(&idea, "id = ?", id).Error
+	err := i.db.Preload("Category").Preload("Pros", "is_pro = ?", true).Preload("Cons", "is_pro = ?", false).First(&idea, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}

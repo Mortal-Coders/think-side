@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ThinkSide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-pattern {
+            background-color: #f8fafc;
+            background-image:
+                    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        .category-chip.active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        #customCategoryModal {
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-pattern text-gray-900">
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Başlık -->
+    <header class="text-center mb-8">
+        <h1 class="text-4xl font-semibold mb-2">
+            Think<span class="text-sky-700">Side</span>
+        </h1>
+        <p class="text-base text-neutral-600 max-w-xl mx-auto">
+            Kararlarınızı kolayca değerlendirin ve en iyi seçimi yapın
+        </p>
+    </header>
+
+    <!-- Konu ve Kategori -->
+    <section id="setupSection" class="bg-white/90 backdrop-blur-sm p-6 mb-8 rounded-lg shadow-md">
+        <form id="setupForm">
+            <div class="mb-4">
+                <label class="block text-base font-medium mb-2 flex items-center">
+                    <i class="fas fa-lightbulb text-sky-600 mr-2"></i> Konu Başlığı
+                </label>
+                <input id="topicInput" name="title" type="text" placeholder="Örn: Elektrikli araba almak..." required
+                       class="w-full p-3 rounded-lg border border-gray-300 bg-white text-base focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent" />
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-base font-medium flex items-center mb-3">
+                    <i class="fas fa-tags text-cyan-600 mr-2"></i> Karşılaştırma Türü
+                </label>
+                <div id="categoryContainer" class="flex flex-wrap gap-3">
+                    {{range .Categories }}
+                    <button type="button" data-id="{{.ID}}" data-category="{{.LeftLabel}}/{{.RightLabel}}" data-left="{{.LeftLabel}}" data-right="{{.RightLabel}}"
+                            class="category-chip bg-sky-600 text-white hover:bg-sky-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                        <i class="fas fa-balance-scale-left mr-1"></i>{{.LeftLabel}} / {{.RightLabel}}
+                    </button>
+                    {{end}}
+<!--                    <button type="button" data-category="olmali/olmamalı" data-left="Olmalı" data-right="Olmamalı"-->
+<!--                            class="category-chip bg-cyan-600 text-white hover:bg-cyan-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">-->
+<!--                        <i class="fas fa-check-circle mr-1"></i>Olmalı / Olmamalı-->
+<!--                    </button>-->
+<!--                    <button type="button" data-category="avantaj/dezavantaj" data-left="Avantajlar" data-right="Dezavantajlar"-->
+<!--                            class="category-chip bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">-->
+<!--                        <i class="fas fa-chart-line mr-1"></i>Avantaj / Dezavantaj-->
+<!--                    </button>-->
+                    <button type="button" id="addCustomCategoryBtn"
+                            class="bg-gray-200 text-gray-800 hover:bg-gray-300 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                        <i class="fas fa-plus-circle mr-1"></i>Özel Ekle
+                    </button>
+                </div>
+                <input type="hidden" id="selectedCategory" name="category" required />
+            </div>
+
+            <button type="submit" id="startBtn"
+                    class="w-full bg-sky-600 text-white text-base font-medium py-3 rounded-lg hover:bg-sky-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-rocket mr-2"></i>Karşılaştırmayı Başlat
+            </button>
+        </form>
+    </section>
+
+    <!-- Karşılaştırma Alanı -->
+    <section id="comparisonSection" class="hidden">
+        <div class="mb-6 p-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 id="displayTopic" class="text-xl font-semibold text-gray-900 mb-1"></h2>
+                    <p id="displayCategory" class="text-base text-neutral-600"></p>
+                </div>
+                <button id="newComparisonBtn" class="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-redo mr-1"></i>Yeni Karşılaştırma
+                </button>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Sol Taraf -->
+            <div class="bg-white rounded-lg p-4 shadow-md">
+                <h3 id="leftTitle" class="text-lg font-semibold text-emerald-700 mb-3"></h3>
+                <div class="mb-3">
+                    <div class="flex gap-2">
+                        <input type="text" id="leftInput" placeholder="Yeni madde ekleyin..."
+                               class="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                        <button id="addLeftBtn" class="bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 transition-colors duration-200">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <ul id="leftList" class="space-y-2 max-h-96 overflow-y-auto"></ul>
+            </div>
+
+            <!-- Sağ Taraf -->
+            <div class="bg-white rounded-lg p-4 shadow-md">
+                <h3 id="rightTitle" class="text-lg font-semibold text-rose-700 mb-3"></h3>
+                <div class="mb-3">
+                    <div class="flex gap-2">
+                        <input type="text" id="rightInput" placeholder="Yeni madde ekleyin..."
+                               class="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent" />
+                        <button id="addRightBtn" class="bg-rose-600 text-white px-3 py-2 rounded-lg hover:bg-rose-700 transition-colors duration-200">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <ul id="rightList" class="space-y-2 max-h-96 overflow-y-auto"></ul>
+            </div>
+        </div>
+
+        <!-- Özet -->
+        <div class="mt-6 p-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Özet</h3>
+            <div class="flex justify-center gap-8 text-center">
+                <div>
+                    <span id="leftCount" class="text-2xl font-bold text-emerald-600">0</span>
+                    <p class="text-sm text-gray-600" id="leftCountLabel"></p>
+                </div>
+                <div class="text-gray-400">
+                    <i class="fas fa-arrows-alt-h text-xl"></i>
+                </div>
+                <div>
+                    <span id="rightCount" class="text-2xl font-bold text-rose-600">0</span>
+                    <p class="text-sm text-gray-600" id="rightCountLabel"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Özel Kategori Ekleme Modalı -->
+<div id="customCategoryModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-semibold mb-4">Özel Karşılaştırma Türü Ekle</h3>
+        <form id="customCategoryForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Kategori Adı</label>
+                <input type="text" id="customCategoryName" placeholder="Örn: Fiyat/Kalite" required
+                       class="w-full p-2 border rounded-lg">
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Sol Başlık</label>
+                    <input type="text" id="customLeftLabel" placeholder="Örn: Ucuz" required
+                           class="w-full p-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Sağ Başlık</label>
+                    <input type="text" id="customRightLabel" placeholder="Örn: Pahalı" required
+                           class="w-full p-2 border rounded-lg">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="cancelCustomCategoryBtn"
+                        class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">İptal</button>
+                <button type="submit" class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700">Ekle</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="/static/main.js"></script>
+</body>
+</html>

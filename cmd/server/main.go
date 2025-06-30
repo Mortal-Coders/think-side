@@ -20,8 +20,20 @@ func main() {
 
 	r := router.New()
 
-	idea := handler.NewIdeaHandler(service.NewIdeaService(repository.NewIdeaRepository(database)))
-	category := handler.NewCategoryHandler(service.NewCategoryService(repository.NewCategoryRepository(database)))
+	fs := &fasthttp.FS{
+		Root:       "./web/",
+		IndexNames: []string{},
+		Compress:   true,
+	}
+	r.ANY("/{filepath:*}", fs.NewRequestHandler())
+
+	ideaService := service.NewIdeaService(repository.NewIdeaRepository(database))
+	categoryService := service.NewCategoryService(repository.NewCategoryRepository(database))
+	encoder := service.NewEncodingService()
+
+	idea := handler.NewIdeaHandler(ideaService, encoder)
+	category := handler.NewCategoryHandler(categoryService)
+	page := handler.NewPageHandler(ideaService, categoryService)
 
 	r.POST("/ideas", idea.Create)
 	r.GET("/ideas/{id}", idea.GetIdea)
@@ -30,6 +42,9 @@ func main() {
 	r.POST("/categories", category.Create)
 	r.GET("/categories", category.List)
 	r.GET("/categories/{id}", category.Get)
+
+	r.GET("/{id}", page.ServeIdeaPage)
+	r.GET("/", page.ServeIdeaPage)
 
 	err := fasthttp.ListenAndServe(":8080", r.Handler)
 	if err != nil {
