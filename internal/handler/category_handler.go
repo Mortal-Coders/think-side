@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/mortal-coders/think-side/internal/model"
 	"github.com/mortal-coders/think-side/internal/service"
 
@@ -9,11 +11,12 @@ import (
 )
 
 type CategoryHandler struct {
-	svc service.CategoryService
+	svc     service.CategoryService
+	encoder service.Encoder
 }
 
-func NewCategoryHandler(s service.CategoryService) *CategoryHandler {
-	return &CategoryHandler{svc: s}
+func NewCategoryHandler(s service.CategoryService, e service.Encoder) *CategoryHandler {
+	return &CategoryHandler{svc: s, encoder: e}
 }
 
 func (h *CategoryHandler) Create(ctx *fasthttp.RequestCtx) {
@@ -23,6 +26,8 @@ func (h *CategoryHandler) Create(ctx *fasthttp.RequestCtx) {
 		ctx.SetBodyString("Invalid input")
 		return
 	}
+
+	input.ID, _ = h.encoder.Encode(time.Now().UnixMicro())
 
 	if err := h.svc.CreateCategory(&input); err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)

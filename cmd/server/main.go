@@ -32,7 +32,7 @@ func main() {
 	encoder := service.NewEncodingService()
 
 	idea := handler.NewIdeaHandler(ideaService, encoder)
-	category := handler.NewCategoryHandler(categoryService)
+	category := handler.NewCategoryHandler(categoryService, encoder)
 	page := handler.NewPageHandler(ideaService, categoryService)
 
 	r.POST("/ideas", idea.Create)
