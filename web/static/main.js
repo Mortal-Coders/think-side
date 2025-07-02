@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPro: side
             }
 
-            fetch(`/ideas/${id}/prop`, {
+            fetch(`ideas/${id}/prop`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Önce /categories endpointine istek at
         let categoryId = '';
         try {
-            const response = await fetch('/categories', {
+            const response = await fetch('categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
         categoryId: currentData.categoryId
     }
 
-    fetch('/ideas', {
+    fetch('ideas', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Başarılı:', data);
             currentData.id = data.ID;
-            window.location.href = `/${data.ID}`
+            window.location.href = `${data.ID}`
         })
         .catch(error => {
             console.error('Hata:', error);
