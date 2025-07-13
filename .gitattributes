@@ -1,3 +1,6 @@
 
 
 /web/* linguist-vendored
+/web/** linguist-vendored
+web/* linguist-vendored
+web/** linguist-vendored
